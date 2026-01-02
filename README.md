@@ -21,6 +21,7 @@ This repository is used for learning Git, GitHub, and Open Source contribution.
 \## Contributors ❤️
 
 <!-- CONTRIBUTORS-LIST -->
+- safouane el khadir
 
 
 
