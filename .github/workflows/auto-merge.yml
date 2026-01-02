@@ -9,24 +9,26 @@ permissions:
   pull-requests: write
 
 jobs:
-  validate-and-merge:
+  auto-merge:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Get changed files
+      - name: Get added files
         id: files
         uses: tj-actions/changed-files@v44
 
       - name: Validate contributor file
+        id: validate
         run: |
           VALID=false
           for file in ${{ steps.files.outputs.added_files }}; do
-            if [[ "$file" == contributors/*.txt ]]; then
+            if [[ "$file" =~ ^contributors/[^/]+\.txt$ ]]; then
               VALID=true
               echo "CONTRIBUTOR_FILE=$file" >> $GITHUB_ENV
+              break
             fi
           done
 
@@ -37,7 +39,7 @@ jobs:
 
       - name: Extract contributor name
         run: |
-          NAME=$(cat "$CONTRIBUTOR_FILE" | head -n 1)
+          NAME=$(head -n 1 "$CONTRIBUTOR_FILE")
           echo "NAME=$NAME" >> $GITHUB_ENV
 
       - name: Update README
@@ -49,11 +51,12 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add README.md
-          git commit -m "Add contributor: $NAME"
+          git commit -m "Add contributor: $NAME" || echo "No changes to commit"
           git push
 
       - name: Auto-merge PR
         uses: pascalgn/automerge-action@v0.16.3
+        with:
+          merge-method: squash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_METHOD: squash
