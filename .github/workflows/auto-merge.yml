@@ -31,7 +31,7 @@ jobs:
         run: |
           VALID=false
           for file in ${{ steps.files.outputs.added_files }}; do
-            if [[ "$file" =~ ^contributors/[^/]+\.txt$ ]]; then
+            if [[ "$file" =~ ^[Cc]ontributors/[^/]+\.txt$ ]]; then
               VALID=true
               echo "CONTRIBUTOR_FILE=$file" >> $GITHUB_ENV
               break
