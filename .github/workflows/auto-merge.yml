@@ -1,0 +1,59 @@
+name: Auto Merge Contributors
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate-and-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: files
+        uses: tj-actions/changed-files@v44
+
+      - name: Validate contributor file
+        run: |
+          VALID=false
+          for file in ${{ steps.files.outputs.added_files }}; do
+            if [[ "$file" == contributors/*.txt ]]; then
+              VALID=true
+              echo "CONTRIBUTOR_FILE=$file" >> $GITHUB_ENV
+            fi
+          done
+
+          if [ "$VALID" = false ]; then
+            echo "❌ No valid contributor file found."
+            exit 1
+          fi
+
+      - name: Extract contributor name
+        run: |
+          NAME=$(cat "$CONTRIBUTOR_FILE" | head -n 1)
+          echo "NAME=$NAME" >> $GITHUB_ENV
+
+      - name: Update README
+        run: |
+          sed -i "/<!-- CONTRIBUTORS-LIST -->/a - $NAME" README.md
+
+      - name: Commit README update
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add README.md
+          git commit -m "Add contributor: $NAME"
+          git push
+
+      - name: Auto-merge PR
+        uses: pascalgn/automerge-action@v0.16.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_METHOD: squash
