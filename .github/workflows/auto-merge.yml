@@ -41,6 +41,7 @@ jobs:
           if [ "$VALID" = false ]; then
             echo "❌ No valid contributor file found."
             exit 1
+          fi
 
       # 4️⃣ Extract contributor name (first line of the .txt file)
       - name: Extract contributor name
